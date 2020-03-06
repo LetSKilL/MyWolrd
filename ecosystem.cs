@@ -6,27 +6,28 @@ using System.Collections.Generic;
 namespace CSharp_Shell
 {
 	class rabbit{
-		bool male = true;
+		Random rand = new Random();
+		public bool male;
+		public bool ready;
 		
 		public rabbit(){
-			male = true;
+			male = (rand.Next(101) >= 50);
+			ready = true;
 		}
+		
+		
 	}
 	
 	class wolf{
 		public bool male;
 		public int saturation;
+		Random rand = new Random();
 		
 		public wolf(){
-			male = false;
-			saturation = 100;
+			male = (rand.Next(101) >= 0);
+			saturation = rand.Next(50, 100);
 		}
 		
-		static public void create(){
-			Random rand = new Random();
-			//if(rand.Next(101) > 50) male = true;
-		}
-	}
 	
 	class world{
 		static public int getstatus(wolf[] wolfs, rabbit[] rabbits, out int wolfN){
@@ -54,11 +55,44 @@ namespace CSharp_Shell
 		
 		static public void tick(ref wolf[] wolfs, ref rabbit[] rabbits){
 			for (int i = 0; i < wolfs.Length; i++){
+				//wolf
+				if (wolfs[i] == null) continue;
 				wolfs[i].saturation -= 10;
 				
-				if(wolfs[i].saturation < 60) {
+				if (wolfs[i].saturation < 60) { //Food
 					Random rand = new Random();
-					
+					int n = rand.Next(10);
+					if(rabbits[n] != null) {
+						rabbits[n] = null;
+						wolfs[i].saturation += 40;
+					}
+				}
+				
+				if(wolfs[i].saturation <= 0) wolfs[i] = null;
+				
+				
+				//rabbit
+				int[] freeslots = new int[10];
+				int num = 0;
+				for (int b = 0; b < rabbits.Length; b++){
+					if (rabbits[b] != null) {
+						freeslots[num] = b;
+						num++;
+					}
+				};
+				
+				foreach (rabbit a in rabbits){
+					if (a == null) continue;
+					if (a.male == true){
+						rabbit female;
+						foreach (rabbit b in rabbits){
+							if (b.male) female = b;
+							return;
+						}
+						if(female != null){
+							female.ready = false;
+						}
+					}
 				}
 			}
 		}
@@ -71,9 +105,18 @@ namespace CSharp_Shell
         
         private void Main() {
         	world.generate(ref wolfs, ref rabbits);
-            int a = 0;
-            int b = world.getstatus(wolfs, rabbits, out a);
-            Console.WriteLine(a + ", " + b);
+        	
+        	int a = 1;
+        	int b = 1;
+        	int tickN = 0;
+        	
+        	while (a > 0 || b > 0) {
+        		tickN++;
+                a = 0;
+                b = world.getstatus(wolfs, rabbits, out a);
+                Console.WriteLine("{0} Tick: {1} Wolfs {2} Rabbits", tickN, a, b);
+                world.tick(ref wolfs, ref rabbits);
+        	}
         }
     }
-}
+}}
